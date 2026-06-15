@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica Stato Lotto - Lavasecco</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            border: 1px solid #e0f2fe;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.05);
+            text-align: center;
+        }
+        h1 {
+            color: #0284c7;
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 18px;
+            font-size: 22px;
+            letter-spacing: 5px;
+            border: 2px solid #bae6fd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #0284c7;
+        }
+        button {
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0369a1;
+        }
+        #result {
+            margin-top: 30px;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status-pronto { background-color: #dcfce7; color: #166534; }
+        .status-lavorazione { background-color: #fef9c3; color: #854d0e; }
+        .status-problema { background-color: #fee2e2; color: #991b1b; }
+        .status-assente { background-color: #f3f4f6; color: #374151; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Verifica Stato Capi</h1>
+        <p style="color: #64748b; margin-bottom: 25px;">Inserisci il codice di 4 cifre del tuo lotto.</p>
+        
+        <input type="text" id="lottoInput" maxlength="4" placeholder="XXXX" pattern="\d{4}" autocomplete="off">
+        <button id="btnVerifica">Verifica Stato</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByv5Ury2LITDUA7FZab7NYExg7mZOkh2s",
+            authDomain: "lavaseccoapp.firebaseapp.com",
+            databaseURL: "https://lavaseccoapp-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "lavaseccoapp",
+            storageBucket: "lavaseccoapp.firebasestorage.app",
+            messagingSenderId: "465500805546",
+            appId: "1:465500805546:web:5cd5bd8b41977d1f3f73d3",
+            measurementId: "G-MT1HQEKDE6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function verificaStato() {
+            const input = document.getElementById('lottoInput').value;
+            
+            if (!/^\d{4}$/.test(input)) {
+                mostraMessaggio("Per favore, inserisci un codice numerico valido di 4 cifre.", "status-assente");
+                return;
+            }
+
+            try {
+                const dbRef = ref(db, 'lotti/' + input);
+                const snapshot = await get(dbRef);
+
+                if (snapshot.exists()) {
+                    const dati = snapshot.val();
+                    const statoLotto = dati.stato;
+
+                    if (statoLotto === 'pronto') {
+                        mostraMessaggio("Il tuo lotto è PRONTO per il ritiro.", "status-pronto");
+                    } else if (statoLotto === 'lavorazione') {
+                        mostraMessaggio("Il tuo lotto è IN LAVORAZIONE.", "status-lavorazione");
+                    } else if (statoLotto === 'problema') {
+                        mostraMessaggio("Si è verificato un problema con il tuo lotto. Ti preghiamo di contattare il lavasecco.", "status-problema");
+                    } else {
+                        mostraMessaggio(`Il tuo lotto n°${input} non è ancora stato preso in lavorazione, ricontrolla più tardi / ricontrolla il numero di lotto.`, "status-assente");
+                    }
+                } else {
+                    mostraMessaggio(`Il tuo lotto n°${input} non è ancora stato preso in lavorazione, ricontrolla più tardi / ricontrolla il numero di lotto.`, "status-assente");
+                }
+            } catch (error) {
+                console.error("Errore database:", error);
+                mostraMessaggio("Errore di connessione. Riprova più tardi.", "status-assente");
+            }
+        }
+
+        function mostraMessaggio(testo, classeCss) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = testo;
+            resultDiv.className = classeCss;
+            resultDiv.style.display = 'block';
+        }
+
+        document.getElementById('btnVerifica').addEventListener('click', verificaStato);
+    </script>
+</body>
+</html>
