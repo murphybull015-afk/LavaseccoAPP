@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Lotti - Lavasecco (Protetto)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        /* Schermata di Login */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #cbd5e1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-top: 50px;
+            text-align: center;
+        }
+        .login-container h2 { margin-bottom: 25px; color: #1e293b; }
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background-color: #0284c7;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Pannello Lavanderia (Nascosto all'inizio) */
+        .brondi-container {
+            width: 100%;
+            max-width: 700px;
+            display: none; /* Si mostrerà solo dopo il login */
+            flex-direction: column;
+            gap: 35px;
+        }
+        
+        h1 { text-align: center; color: #334155; font-size: 36px; margin: 0; }
+        h2 { color: #1e293b; font-size: 26px; border-bottom: 4px solid #cbd5e1; padding-bottom: 10px; margin: 0 0 15px 0; }
+        .input-group { display: flex; flex-direction: column; gap: 10px; }
+        label { font-size: 28px; font-weight: bold; color: #0f172a; }
+        
+        input.huge-input {
+            font-size: 50px;
+            padding: 20px;
+            text-align: center;
+            border: 5px solid #cbd5e1;
+            border-radius: 15px;
+            letter-spacing: 10px;
+        }
+        input.huge-input:focus { border-color: #0284c7; outline: none; }
+        
+        .btn-grid { display: flex; flex-direction: column; gap: 20px; }
+        button.brondi-btn {
+            font-size: 32px;
+            padding: 35px 20px;
+            border-radius: 20px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            color: #ffffff;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+        }
+        button.brondi-btn:active { transform: translateY(8px); box-shadow: none; }
+        .btn-lavorazione { background-color: #eab308; }
+        .btn-pronto { background-color: #22c55e; }
+        .btn-problema { background-color: #ef4444; }
+        .btn-elimina { background-color: #64748b; font-size: 26px; padding: 25px; }
+        
+        #feedback { font-size: 26px; text-align: center; font-weight: bold; padding: 20px; border-radius: 10px; display: none; }
+        .sezione-pannello { background-color: #ffffff; padding: 25px; border-radius: 20px; border: 3px solid #e2e8f0; box-shadow: 0 6px 12px rgba(0,0,0,0.05); }
+        .lista-lotti { display: flex; flex-direction: column; gap: 15px; }
+        .riga-lotto { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 26px; font-weight: bold; background-color: #f8fafc; }
+        .info-lotto { display: flex; gap: 25px; align-items: center; }
+        
+        .badge-stato { padding: 10px 20px; border-radius: 8px; font-size: 18px; text-transform: uppercase; color: #ffffff; }
+        .badge-lavorazione { background-color: #eab308; }
+        .badge-pronto { background-color: #22c55e; }
+        .badge-problema { background-color: #ef4444; }
+        .badge-consegnato { background-color: #64748b; }
+
+        .btn-azione-lista { font-size: 22px; padding: 15px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; color: #ffffff; }
+        .btn-ripristina { background-color: #0284c7; }
+        .btn-svuota { background-color: #dc2626; font-size: 24px; width: 100%; padding: 25px; border-radius: 15px; margin-top: 20px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .testo-vuoto { font-size: 24px; color: #94a3b8; text-align: center; padding: 30px; font-style: italic; }
+        
+        .btn-logout { background-color: #b91c1c; color: white; padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; align-self: flex-end; }
+    </style>
+</head>
+<body>
+
+    <div id="loginSection" class="login-container">
+        <h2>Accesso Lavanderia</h2>
+        <input type="email" id="loginEmail" class="login-input" placeholder="Email aziendale">
+        <input type="password" id="loginPassword" class="login-input" placeholder="Password">
+        <button id="btnLogin" class="btn-login">ACCEDI</button>
+        <p id="loginError" style="color: red; display: none; margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <div id="adminPanel" class="brondi-container">
+        <button id="btnLogout" class="btn-logout">ESCI (LOGOUT)</button>
+        <h1>PANNELLO LAVANDERIA</h1>
+
+        <div class="input-group">
+            <label for="lottoAdmin">NUMERO LOTTO:</label>
+            <input type="text" id="lottoAdmin" class="huge-input" maxlength="4" placeholder="XXXX">
+        </div>
+
+        <div class="btn-grid">
+            <button id="btnLavorazione" class="brondi-btn btn-lavorazione">IN LAVORAZIONE</button>
+            <button id="btnPronto" class="brondi-btn btn-pronto">PRONTO</button>
+            <button id="btnProblema" class="brondi-btn btn-problema">PROBLEMA</button>
+            <button id="btnElimina" class="brondi-btn btn-elimina">CANCELLA LOTTO (CONSEGNATO)</button>
+        </div>
+
+        <div id="feedback"></div>
+
+        <div class="sezione-pannello">
+            <h2>STORICO LOTTI IN CORSO</h2>
+            <div id="storicoAttivi" class="lista-lotti"></div>
+        </div>
+
+        <div class="sezione-pannello">
+            <h2>CESTINO (LOTTI CONSEGNATI)</h2>
+            <div id="cestinoLotti" class="lista-lotti"></div>
+            <button id="btnSvuotaCestino" class="btn-svuota">SVUOTA CESTINO DEFINITIVAMENTE</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByv5Ury2LITDUA7FZab7NYExg7mZOkh2s",
+            authDomain: "lavaseccoapp.firebaseapp.com",
+            databaseURL: "https://lavaseccoapp-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "lavaseccoapp",
+            storageBucket: "lavaseccoapp.firebasestorage.app",
+            messagingSenderId: "465500805546",
+            appId: "1:465500805546:web:5cd5bd8b41977d1f3f73d3",
+            measurementId: "G-MT1HQEKDE6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        // --- GESTIONE AUTENTICAZIONE ---
+        
+        // Esegue il login
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.style.display = "none";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                errorDiv.textContent = "Credenziali errate o errore di rete.";
+                errorDiv.style.display = "block";
+            }
+        });
+
+        // Esegue il logout
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // Controlla lo stato dell'utente (se è dentro o fuori)
+        onAuthStateChanged(auth, (user) => {
+            const loginSection = document.getElementById('loginSection');
+            const adminPanel = document.getElementById('adminPanel');
+
+            if (user) {
+                // Utente loggato: mostra il pannello e nascondi il login
+                loginSection.style.display = "none";
+                adminPanel.style.display = "flex";
+                attivaAscoltoDatabase(); // Collega il database in tempo reale
+            } else {
+                // Utente non loggato: mostra il login e nascondi il pannello
+                loginSection.style.display = "block";
+                adminPanel.style.display = "none";
+            }
+        });
+
+
+        // --- FUNZIONI DEL DATABASE (ATTIVE SOLO DOPO LOGIN) ---
+        let databaseListener = null;
+
+        async function impostaStato(stato) {
+            const input = document.getElementById('lottoAdmin').value;
+            
+            if (!/^\d{4}$/.test(input)) {
+                mostraFeedback("INSERIRE 4 NUMERI!", "#fee2e2", "#991b1b");
+                return;
+            }
+
+            try {
+                await set(ref(db, 'lotti/' + input), { stato: stato });
+                if (stato === 'consegnato') {
+                    mostraFeedback(`LOTTO ${input} SPOSTATO NEL CESTINO.`, "#f1f5f9", "#334155");
+                } else {
+                    mostraFeedback(`LOTTO ${input} AGGIORNATO.`, "#dcfce7", "#166534");
+                }
+                document.getElementById('lottoAdmin').value = '';
+            } catch (error) {
+                console.error(error);
+                mostraFeedback("ERRORE DI SCRITTURA!", "#fee2e2", "#991b1b");
+            }
+        }
+
+        function mostraFeedback(testo, colSfondo, colTesto) {
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.textContent = testo;
+            feedbackDiv.style.backgroundColor = colSfondo;
+            feedbackDiv.style.color = colTesto;
+            feedbackDiv.style.display = "block";
+            setTimeout(() => { feedbackDiv.style.display = "none"; }, 2500);
+        }
+
+        function attivaAscoltoDatabase() {
+            // Evita duplicati di ascolto
+            if (databaseListener) return;
+
+            databaseListener = onValue(ref(db, 'lotti'), (snapshot) => {
+                const storicoAttivi = document.getElementById('storicoAttivi');
+                const cestinoLotti = document.getElementById('cestinoLotti');
+                const btnSvuota = document.getElementById('btnSvuotaCestino');
+                
+                storicoAttivi.innerHTML = '';
+                cestinoLotti.innerHTML = '';
+
+                let contaAttivi = 0;
+                let contaCestino = 0;
+
+                const data = snapshot.val();
+                
+                if (data) {
+                    const codiciOrdinati = Object.keys(data).sort();
+
+                    codiciOrdinati.forEach(codice => {
+                        const lotto = data[codice];
+                        const riga = document.createElement('div');
+                        riga.className = 'riga-lotto';
+
+                        if (lotto.stato === 'consegnato') {
+                            contaCestino++;
+                            riga.innerHTML = `
+                                <div class="info-lotto">
+                                    <span>N° ${codice}</span>
+                                    <span class="badge-stato badge-consegnato">Consegnato</span>
+                                </div>
+                                <button class="btn-azione-lista btn-ripristina" data-id="${codice}">RIPRISTINA</button>
+                            `;
+                            cestinoLotti.appendChild(riga);
+                        } else {
+                            contaAttivi++;
+                            let classeBadge = `badge-${lotto.stato}`;
+                            riga.innerHTML = `
+                                <div class="info-lotto">
+                                    <span>N° ${codice}</span>
+                                    <span class="badge-stato ${classeBadge}">${lotto.stato}</span>
+                                </div>
+                            `;
+                            storicoAttivi.appendChild(riga);
+                        }
+                    });
+                }
+
+                storicoAttivi.innerHTML = contaAttivi === 0 ? '<div class="testo-vuoto">Nessun lotto in lavorazione al momento.</div>' : storicoAttivi.innerHTML;
+                if (contaCestino === 0) {
+                    cestinoLotti.innerHTML = '<div class="testo-vuoto">Cestino vuoto.</div>';
+                    btnSvuota.style.display = 'none';
+                } else {
+                    btnSvuota.style.display = 'block';
+                }
+
+                document.querySelectorAll('.btn-ripristina').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.getAttribute('data-id');
+                        await set(ref(db, 'lotti/' + id), { stato: 'lavorazione' });
+                    });
+                });
+            });
+        }
+
+        async function svuotaCestinoDefinitivamente() {
+            if (confirm("Vuoi cancellare definitivamente tutti i lotti consegnati dal cloud?")) {
+                const snapshot = await get(ref(db, 'lotti'));
+                const data = snapshot.val();
+                if (data) {
+                    for (const [codice, lotto] of Object.entries(data)) {
+                        if (lotto.stato === 'consegnato') {
+                            await remove(ref(db, 'lotti/' + codice));
+                        }
+                    }
+                    mostraFeedback("CESTINO SVUOTATO.", "#f1f5f9", "#334155");
+                }
+            }
+        }
+
+        document.getElementById('btnLavorazione').addEventListener('click', () => impostaStato('lavorazione'));
+        document.getElementById('btnPronto').addEventListener('click', () => impostaStato('pronto'));
+        document.getElementById('btnProblema').addEventListener('click', () => impostaStato('problema'));
+        document.getElementById('btnElimina').addEventListener('click', () => impostaStato('consegnato'));
+        document.getElementById('btnSvuotaCestino').addEventListener('click', svuotaCestinoDefinitivamente);
+    </script>
+</body>
+</html>
