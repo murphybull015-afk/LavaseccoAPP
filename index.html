@@ -3,93 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifica Stato Lotto - Lavasecco</title>
+    <title>Lavasecco Admin - Gestione Lotti</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff;
-            color: #333333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 450px;
-            padding: 40px;
-            border: 1px solid #e0f2fe;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.05);
-            text-align: center;
-        }
-        h1 {
-            color: #0284c7;
-            font-size: 24px;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-        input {
-            width: 100%;
-            padding: 18px;
-            font-size: 22px;
-            letter-spacing: 5px;
-            border: 2px solid #bae6fd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            text-align: center;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        input:focus {
-            border-color: #0284c7;
-        }
-        button {
-            background-color: #0284c7;
-            color: #ffffff;
-            border: none;
-            padding: 18px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #0369a1;
-        }
-        #result {
-            margin-top: 30px;
-            font-size: 18px;
-            font-weight: 500;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-        }
-        .status-pronto { background-color: #dcfce7; color: #166534; }
-        .status-lavorazione { background-color: #fef9c3; color: #854d0e; }
-        .status-problema { background-color: #fee2e2; color: #991b1b; }
-        .status-assente { background-color: #f3f4f6; color: #374151; }
+        body { font-family: sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .login-container, .brondi-container { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 20px; border: 3px solid #e2e8f0; box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
+        .brondi-container { display: none; flex-direction: column; gap: 20px; }
+        
+        /* Input & Buttons */
+        .huge-input, #cercaLotto { width: 100%; padding: 15px; font-size: 20px; border: 2px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; text-align: center; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .brondi-btn { padding: 20px; border: none; border-radius: 10px; font-weight: bold; color: white; cursor: pointer; }
+        .btn-lavorazione { background: #eab308; }
+        .btn-pronto { background: #22c55e; }
+        .btn-problema { background: #ef4444; }
+        .btn-elimina { background: #64748b; grid-column: span 2; }
+        
+        /* Lista */
+        .riga-lotto { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; }
+        .info-testo { display: flex; flex-direction: column; }
+        .badge-wa { background: #25D366; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .btn-logout { background: #b91c1c; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Verifica Stato Capi</h1>
-        <p style="color: #64748b; margin-bottom: 25px;">Inserisci il codice di 4 cifre del tuo lotto.</p>
-        
-        <input type="text" id="lottoInput" maxlength="4" placeholder="XXXX" pattern="\d{4}" autocomplete="off">
-        <button id="btnVerifica">Verifica Stato</button>
+    <div id="loginSection" class="login-container">
+        <h2>Accesso Riservato</h2>
+        <input type="email" id="loginEmail" class="huge-input" placeholder="Email">
+        <input type="password" id="loginPassword" class="huge-input" placeholder="Password" style="margin-top:10px;">
+        <button id="btnLogin" class="brondi-btn" style="background:#0284c7; width:100%; margin-top:15px;">ACCEDI</button>
+    </div>
 
-        <div id="result"></div>
+    <div id="adminPanel" class="brondi-container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Lotti</h1>
+            <button id="btnLogout" class="btn-logout">ESCI</button>
+        </div>
+
+        <input type="text" id="cercaLotto" placeholder="🔍 Cerca lotto...">
+        <input type="text" id="lottoAdmin" class="huge-input" maxlength="4" placeholder="Inserisci N° Lotto (4 cifre)">
+        
+        <div class="btn-grid">
+            <button onclick="impostaStato('lavorazione')" class="brondi-btn btn-lavorazione">LAVORAZIONE</button>
+            <button onclick="impostaStato('pronto')" class="brondi-btn btn-pronto">PRONTO</button>
+            <button onclick="impostaStato('problema')" class="brondi-btn btn-problema">PROBLEMA</button>
+            <button onclick="impostaStato('consegnato')" class="brondi-btn btn-elimina">CONSEGNATO (ELIMINA)</button>
+        </div>
+
+        <div id="storicoAttivi"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByv5Ury2LITDUA7FZab7NYExg7mZOkh2s",
@@ -104,49 +71,58 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
-        async function verificaStato() {
-            const input = document.getElementById('lottoInput').value;
+        // --- Logica ---
+        window.impostaStato = async (stato) => {
+            const id = document.getElementById('lottoAdmin').value;
+            if (!/^\d{4}$/.test(id)) return alert("Inserisci 4 cifre!");
+            await set(ref(db, 'lotti/' + id), { 
+                stato: stato, 
+                dataAggiornamento: new Date().toLocaleString('it-IT') 
+            });
+            document.getElementById('lottoAdmin').value = '';
+        };
+
+        // UI Realtime
+        onValue(ref(db, 'lotti'), (snapshot) => {
+            const data = snapshot.val() || {};
+            const container = document.getElementById('storicoAttivi');
+            container.innerHTML = '';
             
-            if (!/^\d{4}$/.test(input)) {
-                mostraMessaggio("Per favore, inserisci un codice numerico valido di 4 cifre.", "status-assente");
-                return;
-            }
+            Object.keys(data).sort().forEach(id => {
+                const item = data[id];
+                if (item.stato === 'consegnato') return;
 
-            try {
-                const dbRef = ref(db, 'lotti/' + input);
-                const snapshot = await get(dbRef);
+                const div = document.createElement('div');
+                div.className = 'riga-lotto';
+                div.innerHTML = `
+                    <div class="info-testo">
+                        <strong>Lotto ${id}</strong>
+                        <small>${item.dataAggiornamento}</small>
+                        <span style="color:${item.stato === 'pronto' ? 'green' : 'orange'}">${item.stato.toUpperCase()}</span>
+                    </div>
+                    ${item.stato === 'pronto' ? `<a href="https://wa.me/?text=Ciao,%20il%20tuo%20lotto%20${id}%20è%20pronto!" target="_blank" class="badge-wa">💬 WhatsApp</a>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        });
 
-                if (snapshot.exists()) {
-                    const dati = snapshot.val();
-                    const statoLotto = dati.stato;
+        // Filtro Ricerca
+        document.getElementById('cercaLotto').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('.riga-lotto').forEach(r => {
+                r.style.display = r.textContent.toLowerCase().includes(val) ? 'flex' : 'none';
+            });
+        });
 
-                    if (statoLotto === 'pronto') {
-                        mostraMessaggio("Il tuo lotto è PRONTO per il ritiro.", "status-pronto");
-                    } else if (statoLotto === 'lavorazione') {
-                        mostraMessaggio("Il tuo lotto è IN LAVORAZIONE.", "status-lavorazione");
-                    } else if (statoLotto === 'problema') {
-                        mostraMessaggio("Si è verificato un problema con il tuo lotto. Ti preghiamo di contattare il lavasecco.", "status-problema");
-                    } else {
-                        mostraMessaggio(`Il tuo lotto n°${input} non è ancora stato preso in lavorazione, ricontrolla più tardi / ricontrolla il numero di lotto.`, "status-assente");
-                    }
-                } else {
-                    mostraMessaggio(`Il tuo lotto n°${input} non è ancora stato preso in lavorazione, ricontrolla più tardi / ricontrolla il numero di lotto.`, "status-assente");
-                }
-            } catch (error) {
-                console.error("Errore database:", error);
-                mostraMessaggio("Errore di connessione. Riprova più tardi.", "status-assente");
-            }
-        }
-
-        function mostraMessaggio(testo, classeCss) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = testo;
-            resultDiv.className = classeCss;
-            resultDiv.style.display = 'block';
-        }
-
-        document.getElementById('btnVerifica').addEventListener('click', verificaStato);
+        // Auth
+        document.getElementById('btnLogin').onclick = () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+        document.getElementById('btnLogout').onclick = () => signOut(auth);
+        onAuthStateChanged(auth, (u) => {
+            document.getElementById('loginSection').style.display = u ? 'none' : 'block';
+            document.getElementById('adminPanel').style.display = u ? 'flex' : 'none';
+        });
     </script>
 </body>
 </html>
